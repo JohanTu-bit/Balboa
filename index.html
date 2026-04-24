@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIG AMIGO | Balboa, Risaralda</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-slate-200 overflow-hidden">
+
+    <div id="map" class="fixed inset-0 z-0 flex items-center justify-center bg-slate-300">
+        <span class="text-slate-400 font-bold tracking-widest uppercase text-xs opacity-50">Visor Geográfico SIG AMIGO</span>
+    </div>
+
+    <div class="relative z-10 w-full h-screen p-6 flex flex-col justify-between pointer-events-none">
+        
+        <header class="flex justify-between items-start">
+            <div class="glass-panel px-6 py-3 flex items-center gap-4 pointer-events-auto">
+                <div class="w-12 h-12 bg-emerald-700 rounded-2xl flex items-center justify-center text-white font-black text-2xl">B</div>
+                <div>
+                    <h1 class="text-xl font-extrabold text-slate-800 tracking-tighter">SIG AMIGO</h1>
+                    <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-widest leading-none">Balboa - Risaralda</span>
+                </div>
+            </div>
+
+            <div class="flex gap-3 pointer-events-auto">
+                <div id="admin-badge" class="glass-panel px-4 py-2 flex items-center gap-2 hidden">
+                    <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                    <span class="text-[10px] font-black text-slate-600 uppercase">Sistema EOT Activo</span>
+                </div>
+                <button id="auth-btn" class="bg-slate-900 text-white px-6 py-3 rounded-2xl text-sm font-bold hover:bg-emerald-700 transition-all shadow-xl">
+                    Acceso Técnico
+                </button>
+            </div>
+        </header>
+
+        <div class="flex flex-1 justify-between items-center overflow-hidden my-4">
+            
+            <aside class="glass-panel w-80 p-6 shadow-2xl pointer-events-auto flex flex-col max-h-[80vh]">
+                <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Capas Territoriales</h2>
+                <div id="layer-list" class="flex-1 overflow-y-auto space-y-3 pr-2">
+                    </div>
+                <button id="consult-btn" class="mt-6 w-full bg-emerald-600 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-emerald-700 transition-all uppercase tracking-widest text-[11px]">
+                    Consultar Predio
+                </button>
+            </aside>
+
+            <aside id="detail-panel" class="glass-panel w-96 p-8 pointer-events-auto flex flex-col">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-black text-slate-800">Detalle Predial</h2>
+                    <button id="close-panel" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 text-lg">✕</button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto space-y-6 pr-2">
+                    <div class="w-full h-40 bg-gradient-to-br from-slate-300 to-slate-400 rounded-2xl relative overflow-hidden flex items-center justify-center">
+                        <div class="absolute bottom-4 left-4 bg-slate-900/80 backdrop-blur px-3 py-1 rounded-lg">
+                            <span class="text-[9px] text-white font-bold uppercase tracking-widest">Referencia: 66075-01-001</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="bg-red-50 p-4 rounded-2xl border border-red-100">
+                            <span class="text-[9px] font-black text-red-400 uppercase">Uso Prohibido</span>
+                            <p class="text-red-700 font-bold text-sm">Industria Pesada</p>
+                        </div>
+
+                        <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+                            <span class="text-[9px] font-black text-emerald-400 uppercase">Uso Permitido</span>
+                            <p class="text-emerald-700 font-bold text-sm">Vivienda Bioclimática</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col items-center">
+                            <span class="text-[8px] font-bold text-slate-400 uppercase">Altura Máx</span>
+                            <span class="text-sm font-black text-slate-700">3 Pisos</span>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col items-center">
+                            <span class="text-[8px] font-bold text-slate-400 uppercase">Área Lote</span>
+                            <span class="text-sm font-black text-slate-700">145.2 m²</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="mt-8 w-full border-2 border-emerald-600 text-emerald-700 py-3 rounded-2xl font-bold text-[10px] hover:bg-emerald-600 hover:text-white transition-all uppercase tracking-widest">
+                    Descargar Ficha EOT
+                </button>
+            </aside>
+        </div>
+
+        <footer class="flex justify-between items-end">
+            <div id="tool-bar" class="glass-panel p-2 flex gap-1 pointer-events-auto items-center">
+                <button class="w-12 h-12 hover:bg-slate-100 rounded-xl flex items-center justify-center text-xl" title="Medir">📏</button>
+                <button class="w-12 h-12 hover:bg-slate-100 rounded-xl flex items-center justify-center text-xl" title="Buscar">🔍</button>
+                <button class="w-12 h-12 hover:bg-slate-100 rounded-xl flex items-center justify-center text-xl" title="Imprimir">🖨️</button>
+            </div>
+            
+            <div class="glass-panel p-2 flex gap-2 pointer-events-auto">
+                <button id="btn-sat" class="w-14 h-14 rounded-xl bg-slate-800 border-2 border-white flex items-end justify-center pb-1 shadow-inner opacity-70 hover:opacity-100 transition-all">
+                    <span class="text-[8px] text-white font-black uppercase tracking-tighter">SAT</span>
+                </button>
+                <button id="btn-top" class="w-14 h-14 rounded-xl bg-emerald-100 border-2 border-emerald-500 flex items-end justify-center pb-1 shadow-inner">
+                    <span class="text-[8px] text-emerald-700 font-black uppercase tracking-tighter">TOP</span>
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <div id="login-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-500">
+        <div class="glass-panel p-10 w-full max-w-md shadow-2xl">
+            <div class="text-center mb-8 flex flex-col items-center">
+                <div class="w-16 h-16 bg-emerald-700 rounded-3xl flex items-center justify-center text-white font-black text-3xl mb-4">B</div>
+                <h2 class="text-2xl font-black text-slate-800 tracking-tight">Acceso Técnico</h2>
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1">Administración SIG AMIGO</p>
+            </div>
+            <form id="login-form" class="space-y-4">
+                <input type="text" id="user" required class="w-full bg-slate-100 border-2 border-transparent p-4 rounded-2xl focus:border-emerald-500 outline-none font-bold transition-all" placeholder="Usuario">
+                <input type="password" id="pass" required class="w-full bg-slate-100 border-2 border-transparent p-4 rounded-2xl focus:border-emerald-500 outline-none font-bold transition-all" placeholder="Contraseña">
+                <button type="submit" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black shadow-xl hover:bg-emerald-800 transition-all uppercase tracking-widest text-xs">
+                    Ingresar al Panel
+                </button>
+                <button type="button" id="close-login" class="w-full text-slate-400 text-[9px] font-black mt-4 hover:text-slate-600 transition-all uppercase tracking-widest">
+                    Volver al Visor Público
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/map-layers.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
