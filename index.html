@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIG AMIGO | Balboa – Risaralda</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="overflow-hidden">
+
+    <!-- ═══════════════════════════════════════════
+         MAPA (fondo)
+    ═══════════════════════════════════════════ -->
+    <div id="map-placeholder" class="fixed inset-0 z-0"></div>
+
+    <!-- ═══════════════════════════════════════════
+         LOGO + TÍTULO (superior izquierda)
+    ═══════════════════════════════════════════ -->
+    <div class="fixed top-6 left-6 z-50 flex items-center gap-4 animate-fadein" style="animation-delay:0.1s">
+        <div class="logo-chip glass-soft">
+            <div class="logo-inner">
+                <span class="logo-letter">B</span>
+            </div>
+        </div>
+        <div>
+            <h1 class="brand-title">SIG AMIGO</h1>
+            <p class="brand-sub">Balboa &ndash; Risaralda</p>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         ESTADO DEL SISTEMA + ACCESO TÉCNICO (superior derecha)
+    ═══════════════════════════════════════════ -->
+    <div class="fixed top-6 right-6 z-50 flex items-center gap-3 animate-fadein" style="animation-delay:0.2s">
+        <div class="status-chip glass-soft">
+            <span class="status-dot" id="status-dot"></span>
+            <span class="status-label" id="status-label">Sistema EOT Activo</span>
+        </div>
+        <button id="btn-admin-login" class="btn-acceso-tecnico">
+            <span id="lock-icon">🔐</span>
+            <span id="acceso-label">Acceso Técnico</span>
+        </button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         PANEL LATERAL IZQUIERDO (Capas)
+    ═══════════════════════════════════════════ -->
+    <div id="layers-panel" class="fixed top-28 left-6 z-40 w-72 animate-fadein" style="animation-delay:0.3s">
+        <div class="glass-card p-7">
+
+            <h2 class="panel-section-title mb-5">Capas Territoriales</h2>
+
+            <div class="space-y-4">
+
+                <!-- Capa 1: Perímetro Urbano -->
+                <label class="layer-row group" for="check-limites">
+                    <div class="layer-icon-wrap" style="background:#dbeafe;">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <rect x="2" y="2" width="12" height="12" rx="2" stroke="#3b82f6" stroke-width="1.8" fill="none"/>
+                            <rect x="5" y="5" width="6" height="6" rx="1" fill="#3b82f6" opacity="0.35"/>
+                        </svg>
+                    </div>
+                    <span class="layer-name group-hover:text-emerald-600 transition-colors">Perímetro Urbano</span>
+                    <div class="custom-checkbox-wrap">
+                        <input type="checkbox" id="check-limites" class="custom-checkbox" checked>
+                        <div class="checkbox-visual"></div>
+                    </div>
+                </label>
+
+                <!-- Capa 2: Zonas de Riesgo -->
+                <label class="layer-row group" for="check-riesgo">
+                    <div class="layer-icon-wrap" style="background:#fee2e2;">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 2L14 13H2L8 2Z" stroke="#ef4444" stroke-width="1.8" fill="none" stroke-linejoin="round"/>
+                            <path d="M8 6v3" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round"/>
+                            <circle cx="8" cy="11" r="0.8" fill="#ef4444"/>
+                        </svg>
+                    </div>
+                    <span class="layer-name group-hover:text-emerald-600 transition-colors">Zonas de Riesgo</span>
+                    <div class="custom-checkbox-wrap">
+                        <input type="checkbox" id="check-riesgo" class="custom-checkbox">
+                        <div class="checkbox-visual"></div>
+                    </div>
+                </label>
+
+                <!-- Capa 3: Reserva Forestal -->
+                <label class="layer-row group" for="check-forestal">
+                    <div class="layer-icon-wrap" style="background:#d1fae5;">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 2L12 8H10L13 13H3L6 8H4L8 2Z" fill="#10b981" opacity="0.8"/>
+                        </svg>
+                    </div>
+                    <span class="layer-name group-hover:text-emerald-600 transition-colors">Reserva Forestal</span>
+                    <div class="custom-checkbox-wrap">
+                        <input type="checkbox" id="check-forestal" class="custom-checkbox">
+                        <div class="checkbox-visual"></div>
+                    </div>
+                </label>
+
+                <!-- Capa 4: Catastro (solo admin) -->
+                <label class="layer-row group admin-feature hidden" for="check-catastro">
+                    <div class="layer-icon-wrap" style="background:#fef3c7;">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <rect x="2" y="2" width="5" height="5" rx="1" stroke="#f59e0b" stroke-width="1.6" fill="none"/>
+                            <rect x="9" y="2" width="5" height="5" rx="1" stroke="#f59e0b" stroke-width="1.6" fill="none"/>
+                            <rect x="2" y="9" width="5" height="5" rx="1" stroke="#f59e0b" stroke-width="1.6" fill="none"/>
+                            <rect x="9" y="9" width="5" height="5" rx="1" stroke="#f59e0b" stroke-width="1.6" fill="none"/>
+                        </svg>
+                    </div>
+                    <span class="layer-name group-hover:text-emerald-600 transition-colors">Catastro Predial</span>
+                    <div class="custom-checkbox-wrap">
+                        <input type="checkbox" id="check-catastro" class="custom-checkbox">
+                        <div class="checkbox-visual"></div>
+                    </div>
+                </label>
+
+            </div>
+
+            <div class="divider my-6"></div>
+
+            <!-- Botón Consultar Predio -->
+            <button id="btn-consultar-predio" class="btn-consultar w-full">
+                Consultar Predio
+            </button>
+
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         PANEL DERECHO (Detalle Predial)
+    ═══════════════════════════════════════════ -->
+    <div id="detail-panel" class="glass-card fixed right-6 z-50 w-96">
+        <div class="p-8">
+            <!-- Header del panel -->
+            <div class="flex items-center justify-between mb-6">
+                <span class="badge-predial">Información Predial</span>
+                <button id="close-detail" class="close-btn">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Miniatura satelital -->
+            <div class="predio-thumbnail mb-6">
+                <div class="predio-thumb-inner">
+                    <div class="predio-ref-tag">
+                        <span id="detail-ref">REFERENCIA: 66075-01-001</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Badge tipo suelo -->
+            <div class="flex justify-center mb-6">
+                <span class="badge-suelo" id="detail-tipo-suelo">Suelo Urbano</span>
+            </div>
+
+            <!-- Tabla de datos -->
+            <div class="predio-table mb-6">
+                <div class="predio-table-header">
+                    <span>Parámetro</span>
+                    <span>Valor</span>
+                </div>
+                <div id="detail-rows">
+                    <!-- Filas inyectadas por JS -->
+                    <div class="predio-row">
+                        <span class="predio-param">Uso Principal</span>
+                        <span class="predio-val">Habitacional</span>
+                    </div>
+                    <div class="predio-row">
+                        <span class="predio-param">Área Lote</span>
+                        <span class="predio-val font-bold">145.2 m²</span>
+                    </div>
+                    <div class="predio-row">
+                        <span class="predio-param">Altura Máx</span>
+                        <span class="predio-val">3 Pisos</span>
+                    </div>
+                    <div class="predio-row admin-feature hidden">
+                        <span class="predio-param">Avalúo Catastral</span>
+                        <span class="predio-val text-emerald-600 font-bold">$ 48.500.000</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón descargar ficha -->
+            <button class="btn-ficha-eot w-full" onclick="alert('Generando ficha EOT...')">
+                Descargar Ficha EOT
+            </button>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         BARRA INFERIOR (Herramientas + Capas base)
+    ═══════════════════════════════════════════ -->
+    <div class="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex gap-4 items-end animate-fadein" style="animation-delay:0.5s">
+
+        <!-- Herramientas -->
+        <div class="glass-bar flex items-center gap-1 p-2">
+            <button id="btn-regla" class="tool-btn admin-feature hidden group" title="Regla de medición">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M3 14L14 3" stroke="#64748b" stroke-width="1.6" stroke-linecap="round"/>
+                    <path d="M5 12l1.5-1.5M8 9l1.5-1.5M11 6l1.5-1.5" stroke="#64748b" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>
+                <span class="tool-label">Regla</span>
+            </button>
+            <button id="btn-trigger-search" class="tool-btn group" title="Buscar predio">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <circle cx="9" cy="9" r="5.5" stroke="#64748b" stroke-width="1.6"/>
+                    <path d="M13.5 13.5L17 17" stroke="#64748b" stroke-width="1.6" stroke-linecap="round"/>
+                </svg>
+                <span class="tool-label">Buscar</span>
+            </button>
+            <div class="tool-divider"></div>
+            <button onclick="window.print()" class="tool-btn group" title="Imprimir mapa">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <rect x="4" y="7" width="12" height="8" rx="1.5" stroke="#64748b" stroke-width="1.6"/>
+                    <path d="M7 7V4h6v3" stroke="#64748b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M7 13h6M7 11h3" stroke="#64748b" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>
+                <span class="tool-label">Imprimir</span>
+            </button>
+        </div>
+
+        <!-- Selector de capa base -->
+        <div class="glass-bar flex gap-1 p-2">
+            <button id="btn-sat" class="basemap-btn basemap-dark" onclick="setBasemap('sat')">SAT</button>
+            <button id="btn-map" class="basemap-btn basemap-light active" onclick="setBasemap('map')">TOP</button>
+        </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         BUSCADOR FLOTANTE
+    ═══════════════════════════════════════════ -->
+    <div id="search-container" class="fixed bottom-36 left-1/2 -translate-x-1/2 z-50 hidden animate-slideup">
+        <div class="glass-card p-5 w-80">
+            <div class="flex items-center gap-3 mb-4">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <circle cx="7" cy="7" r="4.5" stroke="#94a3b8" stroke-width="1.5"/>
+                    <path d="M10.5 10.5L13 13" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <input id="input-busqueda" type="text"
+                    placeholder="Buscar predio, dirección o referencia..."
+                    class="search-input flex-1">
+                <button id="close-search" class="close-btn">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="search-results" class="space-y-2 hidden">
+                <div class="search-result-item" onclick="selectSearchResult('66075-01-001', 'Calle 5 #4-23')">
+                    <span class="text-xs font-bold text-slate-700">66075-01-001</span>
+                    <span class="text-xs text-slate-400">Calle 5 #4-23</span>
+                </div>
+                <div class="search-result-item" onclick="selectSearchResult('66075-01-002', 'Carrera 3 #6-14')">
+                    <span class="text-xs font-bold text-slate-700">66075-01-002</span>
+                    <span class="text-xs text-slate-400">Carrera 3 #6-14</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         MODAL DE LOGIN (Acceso Técnico)
+    ═══════════════════════════════════════════ -->
+    <div id="modal-login" class="modal-overlay hidden">
+        <div class="modal-card animate-scalein">
+            <!-- Logo modal -->
+            <div class="flex justify-center mb-6">
+                <div class="logo-inner" style="width:60px;height:60px;border-radius:18px;font-size:24px;">B</div>
+            </div>
+
+            <h2 class="text-2xl font-black text-slate-800 text-center tracking-tight mb-1">Acceso Técnico</h2>
+            <p class="text-[11px] font-bold text-slate-400 text-center uppercase tracking-widest mb-8">Administración SIG AMIGO</p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="modal-label">Usuario</label>
+                    <input id="input-usuario" type="text" placeholder="admin" class="modal-input" value="Funciona">
+                </div>
+                <div>
+                    <label class="modal-label">Contraseña</label>
+                    <input id="input-password" type="password" placeholder="••••••••" class="modal-input" value="demo1234">
+                </div>
+            </div>
+
+            <p id="login-error" class="text-xs text-red-500 text-center mt-3 hidden">Usuario o contraseña incorrectos</p>
+
+            <button id="btn-ingresar" class="btn-ingresar w-full mt-6">
+                Ingresar al Panel
+            </button>
+
+            <button id="btn-volver-publico" class="w-full mt-3 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">
+                Volver al Visor Público
+            </button>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         SCRIPTS
+    ═══════════════════════════════════════════ -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/map-layers.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
