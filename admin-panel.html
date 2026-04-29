@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIG AMIGO | Panel Técnico</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* ── Variables ── */
+        :root {
+            --emerald:      #10b981;
+            --emerald-d:    #059669;
+            --emerald-l:    #d1fae5;
+            --slate-900:    #0f172a;
+            --slate-800:    #1e293b;
+            --slate-700:    #334155;
+            --slate-600:    #475569;
+            --slate-400:    #94a3b8;
+            --slate-200:    #e2e8f0;
+            --slate-100:    #f1f5f9;
+            --slate-50:     #f8fafc;
+            --amber:        #f59e0b;
+            --amber-l:      #fef3c7;
+            --red:          #ef4444;
+            --red-l:        #fee2e2;
+            --blue:         #3b82f6;
+            --blue-l:       #dbeafe;
+            --sidebar-w:    220px;
+            --header-h:     56px;
+            --r:            12px;
+            --t:            all 0.25s cubic-bezier(0.4,0,0.2,1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--slate-100);
+            color: var(--slate-800);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ══════════════════════════════════════
+           GUARD — pantalla de acceso
+           En producción Django niega /admin-panel.html
+           si el usuario no está autenticado.
+           En demo, esta pantalla actúa como guardián.
+        ══════════════════════════════════════ */
+        #guard {
+            position: fixed; inset: 0; z-index: 999;
+            background: var(--slate-900);
+            display: flex; align-items: center; justify-content: center;
+        }
+        #guard.hidden { display: none; }
+
+        .guard-card {
+            background: var(--slate-800);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px;
+            padding: 40px;
+            width: 360px;
+            text-align: center;
+        }
+        .guard-logo {
+            width: 56px; height: 56px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 22px; font-weight: 900; color: white;
+        }
+        .guard-title { font-size: 20px; font-weight: 800; color: white; margin-bottom: 4px; }
+        .guard-sub   { font-size: 11px; font-weight: 600; color: var(--slate-400); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 28px; }
+
+        .guard-label { display: block; font-size: 10px; font-weight: 700; color: var(--slate-400); text-transform: uppercase; letter-spacing: 0.15em; text-align: left; margin-bottom: 6px; }
+        .guard-input {
+            width: 100%; padding: 12px 14px; margin-bottom: 14px;
+            border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.06); color: white;
+            font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; outline: none;
+            transition: border-color 0.2s;
+        }
+        .guard-input:focus { border-color: var(--emerald); }
+        .guard-input::placeholder { color: var(--slate-600); }
+        .guard-btn {
+            width: 100%; padding: 14px; border-radius: 10px; border: none;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white; font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em;
+            cursor: pointer; transition: var(--t);
+        }
+        .guard-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(16,185,129,0.4); }
+        .guard-error { font-size: 12px; color: #f87171; margin-top: 10px; display: none; }
+        .guard-back  { font-size: 11px; color: var(--slate-400); margin-top: 16px; cursor: pointer; }
+        .guard-back:hover { color: white; }
+        .guard-note  { font-size: 10px; color: var(--slate-600); margin-top: 20px; line-height: 1.6; }
+
+        /* ══════════════════════════════════════
+           LAYOUT PRINCIPAL
+        ══════════════════════════════════════ */
+        #app { display: flex; flex-direction: column; height: 100vh; }
+
+        /* Header */
+        .header {
+            height: var(--header-h);
+            background: var(--slate-900);
+            display: flex; align-items: center;
+            padding: 0 20px; gap: 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            flex-shrink: 0;
+        }
+        .header-logo {
+            width: 32px; height: 32px; border-radius: 9px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 900; color: white; flex-shrink: 0;
+        }
+        .header-title { font-size: 14px; font-weight: 700; color: white; }
+        .header-sub   { font-size: 10px; font-weight: 500; color: var(--slate-400); text-transform: uppercase; letter-spacing: 0.12em; }
+        .header-sep   { flex: 1; }
+
+        .header-badge {
+            display: flex; align-items: center; gap: 6px;
+            padding: 5px 12px; border-radius: 20px;
+            background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.25);
+        }
+        .header-dot   { width: 6px; height: 6px; border-radius: 50%; background: var(--emerald); animation: pulse 2s infinite; }
+        .header-status{ font-size: 11px; font-weight: 700; color: var(--emerald); text-transform: uppercase; letter-spacing: 0.1em; }
+
+        .header-user {
+            display: flex; align-items: center; gap: 8px;
+            padding: 5px 10px; border-radius: 10px; cursor: pointer;
+            transition: background 0.15s;
+        }
+        .header-user:hover { background: rgba(255,255,255,0.06); }
+        .header-avatar {
+            width: 28px; height: 28px; border-radius: 8px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 800; color: white;
+        }
+        .header-username { font-size: 12px; font-weight: 600; color: var(--slate-400); }
+
+        .btn-logout {
+            padding: 6px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
+            background: transparent; color: var(--slate-400); font-size: 11px; font-weight: 600;
+            font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; transition: var(--t);
+        }
+        .btn-logout:hover { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: #f87171; }
+
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+        /* Body = sidebar + main */
+        .body { display: flex; flex: 1; overflow: hidden; }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-w); background: white;
+            border-right: 1px solid var(--slate-200);
+            display: flex; flex-direction: column;
+            overflow-y: auto; flex-shrink: 0;
+        }
+        .sidebar-section { padding: 16px 12px 8px; }
+        .sidebar-label   { font-size: 9px; font-weight: 800; color: var(--slate-400); text-transform: uppercase; letter-spacing: 0.18em; padding: 0 8px; margin-bottom: 4px; }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 10px; border-radius: 9px; cursor: pointer;
+            transition: var(--t); margin-bottom: 2px;
+        }
+        .nav-item:hover { background: var(--slate-100); }
+        .nav-item.active { background: var(--emerald-l); }
+        .nav-item.active .nav-icon { color: var(--emerald-d); }
+        .nav-item.active .nav-text { color: var(--emerald-d); font-weight: 700; }
+
+        .nav-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+        .nav-text { font-size: 12px; font-weight: 600; color: var(--slate-600); flex: 1; }
+        .nav-count{ font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; background: var(--slate-100); color: var(--slate-500); }
+        .nav-count.warn { background: var(--amber-l); color: #92400e; }
+
+        .sidebar-divider { height: 1px; background: var(--slate-200); margin: 8px 12px; }
+
+        /* Main */
+        .main { flex: 1; overflow-y: auto; padding: 24px; }
+
+        /* ── Paneles ── */
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        .page-header { margin-bottom: 20px; }
+        .page-title  { font-size: 20px; font-weight: 800; color: var(--slate-900); letter-spacing: -0.03em; }
+        .page-sub    { font-size: 13px; color: var(--slate-400); margin-top: 3px; }
+
+        /* Stats row */
+        .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+        .stat-card {
+            background: white; border: 1px solid var(--slate-200); border-radius: var(--r);
+            padding: 16px 18px;
+        }
+        .stat-label { font-size: 10px; font-weight: 700; color: var(--slate-400); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 6px; }
+        .stat-val   { font-size: 24px; font-weight: 800; color: var(--slate-900); letter-spacing: -0.03em; }
+        .stat-sub   { font-size: 11px; color: var(--slate-400); margin-top: 2px; }
+        .stat-card.green { border-left: 3px solid var(--emerald); }
+        .stat-card.amber { border-left: 3px solid var(--amber); }
+        .stat-card.blue  { border-left: 3px solid var(--blue); }
+        .stat-card.red   { border-left: 3px solid var(--red); }
+
+        /* Cards */
+        .card {
+            background: white; border: 1px solid var(--slate-200);
+            border-radius: var(--r); overflow: hidden; margin-bottom: 16px;
+        }
+        .card-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 18px; border-bottom: 1px solid var(--slate-200);
+        }
+        .card-title-sm { font-size: 13px; font-weight: 700; color: var(--slate-800); }
+        .card-body     { padding: 0; }
+
+        /* Tabla */
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th {
+            padding: 10px 16px; text-align: left;
+            font-size: 10px; font-weight: 700; color: var(--slate-400);
+            text-transform: uppercase; letter-spacing: 0.1em;
+            background: var(--slate-50); border-bottom: 1px solid var(--slate-200);
+        }
+        .data-table td {
+            padding: 12px 16px; font-size: 13px; color: var(--slate-700);
+            border-bottom: 1px solid var(--slate-100);
+        }
+        .data-table tr:last-child td { border-bottom: none; }
+        .data-table tr:hover td { background: var(--slate-50); }
+
+        /* Badges */
+        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .badge-green  { background: var(--emerald-l); color: #065f46; }
+        .badge-amber  { background: var(--amber-l);   color: #92400e; }
+        .badge-red    { background: var(--red-l);     color: #991b1b; }
+        .badge-blue   { background: var(--blue-l);    color: #1e40af; }
+        .badge-gray   { background: var(--slate-100); color: var(--slate-600); }
+        .badge-dot    { width: 5px; height: 5px; border-radius: 50%; }
+        .dot-green { background: #10b981; }
+        .dot-amber { background: #f59e0b; }
+        .dot-red   { background: #ef4444; }
+        .dot-blue  { background: #3b82f6; }
+
+        /* Botones */
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 14px; border-radius: 8px; border: none;
+            font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 700;
+            cursor: pointer; transition: var(--t);
+        }
+        .btn-primary   { background: var(--slate-900); color: white; }
+        .btn-primary:hover { background: #0f172a; transform: translateY(-1px); }
+        .btn-green     { background: var(--emerald); color: white; }
+        .btn-green:hover { background: var(--emerald-d); }
+        .btn-ghost     { background: transparent; border: 1px solid var(--slate-200); color: var(--slate-600); }
+        .btn-ghost:hover { background: var(--slate-50); border-color: var(--slate-300); }
+        .btn-danger    { background: transparent; border: 1px solid var(--red-l); color: var(--red); }
+        .btn-danger:hover { background: var(--red-l); }
+        .btn-sm        { padding: 5px 10px; font-size: 11px; }
+        .btn-icon      { padding: 6px; border-radius: 7px; }
+
+        /* Toggle switch */
+        .toggle { position: relative; width: 36px; height: 20px; display: inline-block; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle-track {
+            position: absolute; inset: 0; background: var(--slate-200);
+            border-radius: 10px; transition: background 0.2s; cursor: pointer;
+        }
+        .toggle input:checked + .toggle-track { background: var(--emerald); }
+        .toggle-track::after {
+            content: ''; position: absolute; top: 3px; left: 3px;
+            width: 14px; height: 14px; background: white; border-radius: 50%;
+            transition: transform 0.2s;
+        }
+        .toggle input:checked + .toggle-track::after { transform: translateX(16px); }
+
+        /* Input / Select */
+        .form-input, .form-select {
+            padding: 9px 12px; border-radius: 8px;
+            border: 1px solid var(--slate-200); background: white;
+            font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; color: var(--slate-800);
+            outline: none; transition: border-color 0.2s;
+        }
+        .form-input:focus, .form-select:focus { border-color: var(--emerald); }
+
+        /* Upload zone */
+        .upload-zone {
+            border: 2px dashed var(--slate-200); border-radius: var(--r);
+            padding: 32px; text-align: center; cursor: pointer;
+            transition: var(--t); background: var(--slate-50);
+        }
+        .upload-zone:hover { border-color: var(--emerald); background: var(--emerald-l); }
+        .upload-zone.drag  { border-color: var(--emerald); background: var(--emerald-l); }
+        .upload-icon { font-size: 32px; margin-bottom: 10px; }
+        .upload-title{ font-size: 14px; font-weight: 700; color: var(--slate-700); margin-bottom: 4px; }
+        .upload-sub  { font-size: 12px; color: var(--slate-400); }
+
+        /* Progress bar */
+        .progress-wrap { background: var(--slate-100); border-radius: 4px; height: 6px; overflow: hidden; }
+        .progress-bar  { height: 100%; background: linear-gradient(90deg, #10b981, #059669); border-radius: 4px; transition: width 0.4s; }
+
+        /* Log de actividad */
+        .log-item {
+            display: flex; align-items: flex-start; gap: 12px;
+            padding: 12px 16px; border-bottom: 1px solid var(--slate-100);
+        }
+        .log-item:last-child { border-bottom: none; }
+        .log-avatar {
+            width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 800;
+        }
+        .log-content { flex: 1; }
+        .log-action  { font-size: 12px; font-weight: 600; color: var(--slate-700); }
+        .log-action strong { color: var(--slate-900); }
+        .log-time    { font-size: 10px; color: var(--slate-400); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+        .log-tag     { font-size: 10px; padding: 2px 7px; border-radius: 6px; font-weight: 700; }
+
+        /* Attr table */
+        .attr-wrap   { overflow-x: auto; }
+        .attr-table  { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+        .attr-table th {
+            padding: 8px 14px; background: var(--slate-900); color: var(--slate-400);
+            font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-align: left;
+            border-right: 1px solid rgba(255,255,255,0.06);
+        }
+        .attr-table td {
+            padding: 9px 14px; border-bottom: 1px solid var(--slate-100);
+            border-right: 1px solid var(--slate-100); color: var(--slate-700);
+        }
+        .attr-table tr:hover td { background: var(--slate-50); }
+        .attr-val-num  { color: #0891b2; }
+        .attr-val-str  { color: #16a34a; }
+        .attr-val-null { color: var(--slate-300); font-style: italic; }
+
+        /* Tooltip */
+        .tooltip-wrap { position: relative; display: inline-flex; }
+        .tooltip { position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: var(--slate-900); color: white; font-size: 11px; padding: 4px 10px; border-radius: 6px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+        .tooltip-wrap:hover .tooltip { opacity: 1; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); z-index: 200; display: flex; align-items: center; justify-content: center; }
+        .modal-overlay.hidden { display: none; }
+        .modal-box { background: white; border-radius: 20px; width: 480px; max-height: 80vh; overflow-y: auto; box-shadow: 0 32px 64px rgba(0,0,0,0.2); }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--slate-200); }
+        .modal-title  { font-size: 16px; font-weight: 800; color: var(--slate-900); }
+        .modal-body   { padding: 24px; }
+        .modal-footer { display: flex; gap: 8px; justify-content: flex-end; padding: 16px 24px; border-top: 1px solid var(--slate-200); }
+
+        .form-group    { margin-bottom: 16px; }
+        .form-label    { display: block; font-size: 11px; font-weight: 700; color: var(--slate-500); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 6px; }
+        .form-input-full { width: 100%; }
+        .form-row      { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        /* Toast */
+        #toast {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(10px);
+            background: var(--slate-900); color: white; padding: 10px 20px;
+            border-radius: 30px; font-size: 12px; font-weight: 600;
+            z-index: 9999; opacity: 0; transition: all 0.35s cubic-bezier(0.19,1,0.22,1);
+            pointer-events: none; white-space: nowrap;
+        }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* Responsive adjustments */
+        @media (max-width: 900px) {
+            .stats-row { grid-template-columns: repeat(2,1fr); }
+            .sidebar   { width: 180px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     GUARD — protección de acceso
+     En producción: reemplazar con autenticación
+     Django (@login_required en la vista que sirve este HTML)
+══════════════════════════════════════════ -->
+<div id="guard">
+    <div class="guard-card">
+        <div class="guard-logo">B</div>
+        <div class="guard-title">Panel Técnico</div>
+        <div class="guard-sub">SIG AMIGO · Balboa, Risaralda</div>
+
+        <label class="guard-label">Usuario</label>
+        <input id="g-user" type="text" class="guard-input" placeholder="admin" value="admin">
+
+        <label class="guard-label">Contraseña</label>
+        <input id="g-pass" type="password" class="guard-input" placeholder="••••••••" value="demo1234">
+
+        <button class="guard-btn" onclick="intentarAcceso()">Ingresar al Panel</button>
+        <div class="guard-error" id="guard-error">Credenciales incorrectas</div>
+
+        <div class="guard-back" onclick="window.location.href='../index.html'">← Volver al visor público</div>
+
+        <div class="guard-note">
+            ⚠️ En producción este panel es protegido por Django.<br>
+            Nadie puede acceder sin credenciales válidas en el servidor,<br>
+            incluso conociendo la URL.
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     APP PRINCIPAL
+══════════════════════════════════════════ -->
+<div id="app">
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-logo">B</div>
+        <div>
+            <div class="header-title">SIG AMIGO</div>
+            <div class="header-sub">Panel Técnico · Balboa</div>
+        </div>
+        <div class="header-sep"></div>
+        <div class="header-badge">
+            <div class="header-dot"></div>
+            <span class="header-status" id="db-status">Base de datos conectada</span>
+        </div>
+        <div class="header-user">
+            <div class="header-avatar" id="user-initials">AD</div>
+            <span class="header-username" id="user-name">admin</span>
+        </div>
+        <button class="btn-logout" onclick="cerrarSesion()">Cerrar sesión</button>
+    </header>
+
+    <div class="body">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-label">Principal</div>
+                <div class="nav-item active" onclick="showPanel('dashboard',this)">
+                    <div class="nav-icon" style="background:#d1fae5">📊</div>
+                    <span class="nav-text">Dashboard</span>
+                </div>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-label">Gestión de capas</div>
+                <div class="nav-item" onclick="showPanel('capas',this)">
+                    <div class="nav-icon" style="background:#dbeafe">🗺️</div>
+                    <span class="nav-text">Capas cargadas</span>
+                    <span class="nav-count" id="count-capas">3</span>
+                </div>
+                <div class="nav-item" onclick="showPanel('upload',this)">
+                    <div class="nav-icon" style="background:#fef3c7">⬆️</div>
+                    <span class="nav-text">Subir capas</span>
+                </div>
+                <div class="nav-item" onclick="showPanel('atributos',this)">
+                    <div class="nav-icon" style="background:#ede9fe">📋</div>
+                    <span class="nav-text">Tabla de atributos</span>
+                </div>
+                <div class="nav-item" onclick="showPanel('relaciones',this)">
+                    <div class="nav-icon" style="background:#fce7f3">🔗</div>
+                    <span class="nav-text">Relaciones / Llaves</span>
+                </div>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-label">Datos</div>
+                <div class="nav-item" onclick="showPanel('predios',this)">
+                    <div class="nav-icon" style="background:#fef3c7">🏠</div>
+                    <span class="nav-text">Predios</span>
+                    <span class="nav-count">247</span>
+                </div>
+                <div class="nav-item" onclick="showPanel('usuarios',this)">
+                    <div class="nav-icon" style="background:#d1fae5">👥</div>
+                    <span class="nav-text">Usuarios</span>
+                    <span class="nav-count">4</span>
+                </div>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-label">Sistema</div>
+                <div class="nav-item" onclick="showPanel('log',this)">
+                    <div class="nav-icon" style="background:#f1f5f9">📜</div>
+                    <span class="nav-text">Log de actividad</span>
+                    <span class="nav-count warn">12</span>
+                </div>
+                <div class="nav-item" onclick="showPanel('config',this)">
+                    <div class="nav-icon" style="background:#f1f5f9">⚙️</div>
+                    <span class="nav-text">Configuración</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main content -->
+        <main class="main">
+
+            <!-- ── DASHBOARD ── -->
+            <div id="panel-dashboard" class="panel active">
+                <div class="page-header">
+                    <div class="page-title">Dashboard</div>
+                    <div class="page-sub">Resumen del sistema · Municipio de Balboa, Risaralda</div>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-card green">
+                        <div class="stat-label">Capas activas</div>
+                        <div class="stat-val">3</div>
+                        <div class="stat-sub">de 8 planificadas</div>
+                    </div>
+                    <div class="stat-card blue">
+                        <div class="stat-label">Predios registrados</div>
+                        <div class="stat-val">247</div>
+                        <div class="stat-sub">Catastro 2024</div>
+                    </div>
+                    <div class="stat-card amber">
+                        <div class="stat-label">Área municipal</div>
+                        <div class="stat-val">12.068</div>
+                        <div class="stat-sub">Hectáreas · MAGNA-SIRGAS</div>
+                    </div>
+                    <div class="stat-card red">
+                        <div class="stat-label">Zonas de riesgo</div>
+                        <div class="stat-val">7</div>
+                        <div class="stat-sub">3 alto · 4 medio</div>
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                    <!-- Estado de capas -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title-sm">Estado de capas EOT</span>
+                            <button class="btn btn-ghost btn-sm" onclick="showPanel('upload',document.querySelector('[onclick*=upload]'))">+ Subir capa</button>
+                        </div>
+                        <div class="card-body">
+                            <table class="data-table">
+                                <thead><tr><th>Capa</th><th>Estado</th><th>Registros</th></tr></thead>
+                                <tbody>
+                                    <tr><td>Perímetro Urbano</td><td><span class="badge badge-green"><div class="badge-dot dot-green"></div>Cargada</span></td><td>1</td></tr>
+                                    <tr><td>Red Hídrica</td><td><span class="badge badge-green"><div class="badge-dot dot-green"></div>Cargada</span></td><td>34</td></tr>
+                                    <tr><td>Zonas de Riesgo</td><td><span class="badge badge-amber"><div class="badge-dot dot-amber"></div>Parcial</span></td><td>7</td></tr>
+                                    <tr><td>Cobertura CORINE</td><td><span class="badge badge-gray">Pendiente</span></td><td>—</td></tr>
+                                    <tr><td>Catastro Predial</td><td><span class="badge badge-gray">Pendiente</span></td><td>—</td></tr>
+                                    <tr><td>Equipamientos</td><td><span class="badge badge-gray">Pendiente</span></td><td>—</td></tr>
+                                    <tr><td>Infraestructura Vial</td><td><span class="badge badge-gray">Pendiente</span></td><td>—</td></tr>
+                                    <tr><td>Uso del Suelo EOT</td><td><span class="badge badge-gray">Pendiente</span></td><td>—</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Actividad reciente -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title-sm">Actividad reciente</span>
+                            <button class="btn btn-ghost btn-sm" onclick="showPanel('log',document.querySelector('[onclick*=log]'))">Ver todo</button>
+                        </div>
+                        <div class="card-body" id="log-preview"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── CAPAS CARGADAS ── -->
+            <div id="panel-capas" class="panel">
+                <div class="page-header" style="display:flex;align-items:center;justify-content:space-between">
+                    <div>
+                        <div class="page-title">Capas cargadas</div>
+                        <div class="page-sub">Gestión de capas GeoJSON / Shapefile en PostGIS</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="showPanel('upload',document.querySelector('[onclick*=upload]'))">⬆ Subir nueva capa</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title-sm">Inventario de capas</span>
+                        <div style="display:flex;gap:8px">
+                            <input type="text" class="form-input" placeholder="Filtrar capas…" style="width:200px" oninput="filtrarCapas(this.value)">
+                            <select class="form-select" onchange="filtrarEstado(this.value)">
+                                <option value="">Todos los estados</option>
+                                <option value="cargada">Cargadas</option>
+                                <option value="pendiente">Pendientes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <table class="data-table" id="tabla-capas">
+                            <thead><tr><th>Nombre</th><th>Tipo</th><th>CRS</th><th>Registros</th><th>Tamaño</th><th>Estado</th><th>Visible</th><th>Acciones</th></tr></thead>
+                            <tbody id="capas-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── SUBIR CAPAS ── -->
+            <div id="panel-upload" class="panel">
+                <div class="page-header">
+                    <div class="page-title">Subir capas</div>
+                    <div class="page-sub">GeoJSON, Shapefile (.zip con .shp .dbf .prj), KML</div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                    <div>
+                        <div class="card" style="margin-bottom:16px">
+                            <div class="card-header"><span class="card-title-sm">Zona de carga</span></div>
+                            <div class="card-body" style="padding:16px">
+                                <div class="upload-zone" id="drop-zone"
+                                    ondragover="event.preventDefault();this.classList.add('drag')"
+                                    ondragleave="this.classList.remove('drag')"
+                                    ondrop="handleDrop(event)"
+                                    onclick="document.getElementById('file-input').click()">
+                                    <div class="upload-icon">📂</div>
+                                    <div class="upload-title">Arrastra tu archivo aquí</div>
+                                    <div class="upload-sub">GeoJSON · SHP (zip) · KML — máx. 50 MB</div>
+                                </div>
+                                <input type="file" id="file-input" accept=".geojson,.json,.kml,.zip" style="display:none" onchange="handleFileSelect(this)">
+
+                                <div id="upload-preview" style="display:none;margin-top:16px">
+                                    <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--slate-50);border-radius:10px;border:1px solid var(--slate-200);margin-bottom:12px">
+                                        <div style="font-size:22px" id="file-emoji">📄</div>
+                                        <div style="flex:1">
+                                            <div style="font-size:13px;font-weight:700;color:var(--slate-800)" id="file-name">archivo.geojson</div>
+                                            <div style="font-size:11px;color:var(--slate-400)" id="file-size">2.4 MB</div>
+                                        </div>
+                                        <button class="btn btn-ghost btn-sm btn-icon" onclick="limpiarUpload()">✕</button>
+                                    </div>
+                                    <div class="progress-wrap" id="progress-wrap" style="display:none;margin-bottom:12px">
+                                        <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+                                    </div>
+                                    <button class="btn btn-green" style="width:100%" onclick="simularUpload()">Subir a PostGIS</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header"><span class="card-title-sm">Configuración de carga</span></div>
+                            <div class="card-body" style="padding:16px">
+                                <div class="form-group">
+                                    <label class="form-label">Nombre de la capa</label>
+                                    <input type="text" class="form-input form-input-full" placeholder="ej: zonas_riesgo_balboa_2024">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Dimensión EOT</label>
+                                    <select class="form-select form-input-full">
+                                        <option>Funcional</option>
+                                        <option>Ambiental</option>
+                                        <option>Económica</option>
+                                        <option>Social</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Sistema de referencia (CRS)</label>
+                                    <select class="form-select form-input-full">
+                                        <option>MAGNA-SIRGAS (EPSG:4326) — recomendado</option>
+                                        <option>MAGNA-SIRGAS Colombia Bogotá (EPSG:3116)</option>
+                                        <option>WGS84 (EPSG:4326)</option>
+                                    </select>
+                                </div>
+                                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--slate-200)">
+                                    <div>
+                                        <div style="font-size:12px;font-weight:600;color:var(--slate-700)">Visible en el visor público</div>
+                                        <div style="font-size:11px;color:var(--slate-400)">Los ciudadanos pueden ver esta capa</div>
+                                    </div>
+                                    <label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div></label>
+                                </div>
+                                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--slate-200)">
+                                    <div>
+                                        <div style="font-size:12px;font-weight:600;color:var(--slate-700)">Validar topología</div>
+                                        <div style="font-size:11px;color:var(--slate-400)">ST_IsValid antes de guardar</div>
+                                    </div>
+                                    <label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="card">
+                            <div class="card-header"><span class="card-title-sm">Historial de cargas</span></div>
+                            <div class="card-body" id="historial-cargas"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── TABLA DE ATRIBUTOS ── -->
+            <div id="panel-atributos" class="panel">
+                <div class="page-header">
+                    <div class="page-title">Tabla de atributos</div>
+                    <div class="page-sub">Visualiza y edita los atributos de cualquier capa</div>
+                </div>
+
+                <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center">
+                    <select class="form-select" id="capa-selector" onchange="cargarAtributos(this.value)" style="width:260px">
+                        <option value="">Seleccionar capa…</option>
+                        <option value="perimetro">Perímetro Urbano</option>
+                        <option value="redhidrica">Red Hídrica de Risaralda</option>
+                        <option value="riesgo">Zonas de Riesgo</option>
+                    </select>
+                    <button class="btn btn-ghost btn-sm" onclick="exportarAtributos()">⬇ Exportar CSV</button>
+                    <button class="btn btn-ghost btn-sm" onclick="toast('Función disponible con Django conectado')">+ Nueva fila</button>
+                    <span id="attr-count" style="font-size:12px;color:var(--slate-400);margin-left:auto"></span>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <div class="attr-wrap" id="attr-container">
+                            <div style="padding:48px;text-align:center;color:var(--slate-400)">
+                                <div style="font-size:28px;margin-bottom:8px">📋</div>
+                                <div style="font-size:13px;">Selecciona una capa para ver sus atributos</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── RELACIONES / LLAVES ── -->
+            <div id="panel-relaciones" class="panel">
+                <div class="page-header">
+                    <div class="page-title">Relaciones entre capas</div>
+                    <div class="page-sub">Foreign keys y llaves de unión entre tablas PostGIS — equivalente a MySQL JOIN</div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title-sm">Relaciones definidas</span>
+                            <button class="btn btn-primary btn-sm" onclick="document.getElementById('modal-relacion').classList.remove('hidden')">+ Nueva relación</button>
+                        </div>
+                        <div class="card-body">
+                            <table class="data-table">
+                                <thead><tr><th>Tabla origen</th><th>Campo</th><th>Tabla destino</th><th>Campo</th><th>Tipo</th></tr></thead>
+                                <tbody>
+                                    <tr>
+                                        <td><span class="badge badge-blue">dptolimite</span></td>
+                                        <td style="font-family:'JetBrains Mono',monospace;font-size:12px">nom_mun</td>
+                                        <td><span class="badge badge-green">predios</span></td>
+                                        <td style="font-family:'JetBrains Mono',monospace;font-size:12px">municipio</td>
+                                        <td><span class="badge badge-gray">1:N</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge badge-blue">predios</span></td>
+                                        <td style="font-family:'JetBrains Mono',monospace;font-size:12px">referencia</td>
+                                        <td><span class="badge badge-green">uso_suelo</span></td>
+                                        <td style="font-family:'JetBrains Mono',monospace;font-size:12px">ref_catastral</td>
+                                        <td><span class="badge badge-gray">N:1</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge badge-blue">zonariesgo</span></td>
+                                        <td style="font-family:'JetBrains Mono',monospace;font-size:12px">geom</td>
+                                        <td><span class="badge badge-green">predios</span></td>
+                                        <td style="font-family:'JetBrains Mono',monospace;font-size:12px">geom</td>
+                                        <td><span class="badge badge-amber">Espacial</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header"><span class="card-title-sm">Índices espaciales</span></div>
+                        <div class="card-body">
+                            <div style="padding:12px 0">
+                                <div style="font-size:11px;color:var(--slate-400);padding:0 16px 10px;line-height:1.6">
+                                    Los índices espaciales (GIST) aceleran las consultas geográficas. PostGIS los genera automáticamente al cargar capas desde QGIS.
+                                </div>
+                                <table class="data-table">
+                                    <thead><tr><th>Tabla</th><th>Índice</th><th>Tipo</th><th>Estado</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>dptolimite</td><td style="font-family:'JetBrains Mono',monospace;font-size:11px">dptolimite_geom_idx</td><td>GIST</td><td><span class="badge badge-green"><div class="badge-dot dot-green"></div>Activo</span></td></tr>
+                                        <tr><td>redhidrica</td><td style="font-family:'JetBrains Mono',monospace;font-size:11px">redhidrica_geom_idx</td><td>GIST</td><td><span class="badge badge-green"><div class="badge-dot dot-green"></div>Activo</span></td></tr>
+                                        <tr><td>predios</td><td style="font-family:'JetBrains Mono',monospace;font-size:11px">predios_geom_idx</td><td>GIST</td><td><span class="badge badge-gray">Pendiente</span></td></tr>
+                                    </tbody>
+                                </table>
+                                <div style="padding:12px 16px 4px">
+                                    <button class="btn btn-ghost btn-sm" onclick="toast('Índices creados correctamente en PostGIS')">Crear índices faltantes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── PREDIOS ── -->
+            <div id="panel-predios" class="panel">
+                <div class="page-header" style="display:flex;align-items:center;justify-content:space-between">
+                    <div>
+                        <div class="page-title">Catastro Predial</div>
+                        <div class="page-sub">Gestión de predios — Balboa, Risaralda</div>
+                    </div>
+                    <div style="display:flex;gap:8px">
+                        <button class="btn btn-ghost btn-sm" onclick="toast('CSV descargado')">⬇ Exportar CSV</button>
+                        <button class="btn btn-primary" onclick="document.getElementById('modal-predio').classList.remove('hidden')">+ Nuevo predio</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title-sm">247 predios registrados</span>
+                        <input type="text" class="form-input" placeholder="Buscar referencia o dirección…" style="width:240px">
+                    </div>
+                    <div class="card-body">
+                        <table class="data-table">
+                            <thead><tr><th>Referencia</th><th>Dirección</th><th>Tipo suelo</th><th>Uso</th><th>Área (m²)</th><th>Avalúo</th><th>Acciones</th></tr></thead>
+                            <tbody id="predios-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── USUARIOS ── -->
+            <div id="panel-usuarios" class="panel">
+                <div class="page-header" style="display:flex;align-items:center;justify-content:space-between">
+                    <div>
+                        <div class="page-title">Usuarios del sistema</div>
+                        <div class="page-sub">Gestión de roles y accesos</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="document.getElementById('modal-usuario').classList.remove('hidden')">+ Nuevo usuario</button>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <table class="data-table">
+                            <thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Último acceso</th><th>Estado</th><th>Acciones</th></tr></thead>
+                            <tbody id="usuarios-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── LOG ── -->
+            <div id="panel-log" class="panel">
+                <div class="page-header">
+                    <div class="page-title">Log de actividad</div>
+                    <div class="page-sub">Auditoría completa — quién hizo qué y cuándo</div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title-sm">Últimas acciones</span>
+                        <div style="display:flex;gap:8px">
+                            <select class="form-select" style="font-size:12px">
+                                <option>Todos los usuarios</option>
+                                <option>admin</option>
+                                <option>tecnico1</option>
+                            </select>
+                            <button class="btn btn-ghost btn-sm" onclick="toast('Log exportado')">⬇ Exportar</button>
+                        </div>
+                    </div>
+                    <div class="card-body" id="log-full"></div>
+                </div>
+            </div>
+
+            <!-- ── CONFIG ── -->
+            <div id="panel-config" class="panel">
+                <div class="page-header">
+                    <div class="page-title">Configuración del sistema</div>
+                    <div class="page-sub">Parámetros del geoportal SIG AMIGO</div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                    <div class="card">
+                        <div class="card-header"><span class="card-title-sm">Conexión a base de datos</span></div>
+                        <div class="card-body" style="padding:16px">
+                            <div class="form-group">
+                                <label class="form-label">Host</label>
+                                <input class="form-input form-input-full" value="db (Docker service)" readonly style="background:var(--slate-50);color:var(--slate-400)">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Puerto</label>
+                                    <input class="form-input form-input-full" value="5432" readonly style="background:var(--slate-50);color:var(--slate-400)">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Base de datos</label>
+                                    <input class="form-input form-input-full" value="geoportal_db" readonly style="background:var(--slate-50);color:var(--slate-400)">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Motor</label>
+                                <input class="form-input form-input-full" value="PostGIS 15-3.3 (PostgreSQL)" readonly style="background:var(--slate-50);color:var(--slate-400)">
+                            </div>
+                            <button class="btn btn-ghost btn-sm" onclick="toast('Conexión verificada correctamente ✓')">Probar conexión</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header"><span class="card-title-sm">Sistema de referencia</span></div>
+                        <div class="card-body" style="padding:16px">
+                            <div class="form-group">
+                                <label class="form-label">CRS por defecto</label>
+                                <select class="form-select form-input-full">
+                                    <option selected>MAGNA-SIRGAS (EPSG:4326)</option>
+                                    <option>Colombia Bogotá (EPSG:3116)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Normativa aplicada</label>
+                                <input class="form-input form-input-full" value="Resolución 658 IGAC · EOT Balboa 2022">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Municipio</label>
+                                <input class="form-input form-input-full" value="Balboa, Risaralda · Código: 66075">
+                            </div>
+                            <button class="btn btn-ghost btn-sm" onclick="toast('Configuración guardada')">Guardar cambios</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header"><span class="card-title-sm">Backup de base de datos</span></div>
+                        <div class="card-body" style="padding:16px">
+                            <div style="font-size:12px;color:var(--slate-500);margin-bottom:14px;line-height:1.7">
+                                El backup genera un <code style="background:var(--slate-100);padding:1px 5px;border-radius:4px;font-size:11px">pg_dump</code> de PostGIS y lo descarga como archivo <code style="background:var(--slate-100);padding:1px 5px;border-radius:4px;font-size:11px">.sql</code>.
+                                Con Django conectado esto se puede programar automáticamente.
+                            </div>
+                            <div style="display:flex;gap:8px">
+                                <button class="btn btn-green btn-sm" onclick="toast('Backup generado: geoportal_db_2024.sql')">Generar backup ahora</button>
+                                <button class="btn btn-ghost btn-sm" onclick="toast('Último backup: 27/04/2026 · 208 MB')">Ver historial</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header"><span class="card-title-sm">Acceso al visor público</span></div>
+                        <div class="card-body" style="padding:16px">
+                            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--slate-200)">
+                                <div>
+                                    <div style="font-size:12px;font-weight:600;color:var(--slate-700)">Visor público activo</div>
+                                    <div style="font-size:11px;color:var(--slate-400)">Ciudadanos pueden acceder</div>
+                                </div>
+                                <label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div></label>
+                            </div>
+                            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0">
+                                <div>
+                                    <div style="font-size:12px;font-weight:600;color:var(--slate-700)">Modo mantenimiento</div>
+                                    <div style="font-size:11px;color:var(--slate-400)">Muestra aviso temporal</div>
+                                </div>
+                                <label class="toggle"><input type="checkbox"><div class="toggle-track"></div></label>
+                            </div>
+                            <div style="margin-top:10px">
+                                <a href="../index.html" class="btn btn-ghost btn-sm" style="text-decoration:none">← Ir al visor público</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<!-- ── MODAL Nueva relación ── -->
+<div id="modal-relacion" class="modal-overlay hidden">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title">Nueva relación entre capas</span>
+            <button class="btn btn-ghost btn-sm btn-icon" onclick="this.closest('.modal-overlay').classList.add('hidden')">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Tabla origen</label>
+                    <select class="form-select form-input-full"><option>dptolimite</option><option>redhidrica</option><option>predios</option></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Campo origen</label>
+                    <input class="form-input form-input-full" placeholder="nom_mun">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Tabla destino</label>
+                    <select class="form-select form-input-full"><option>predios</option><option>uso_suelo</option><option>equipamientos</option></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Campo destino</label>
+                    <input class="form-input form-input-full" placeholder="municipio">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Tipo de relación</label>
+                <select class="form-select form-input-full">
+                    <option>1:N (uno a muchos)</option>
+                    <option>N:1 (muchos a uno)</option>
+                    <option>Espacial (ST_Intersects)</option>
+                    <option>Espacial (ST_Contains)</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').classList.add('hidden')">Cancelar</button>
+            <button class="btn btn-primary" onclick="this.closest('.modal-overlay').classList.add('hidden');toast('Relación creada correctamente')">Crear relación</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── MODAL Nuevo predio ── -->
+<div id="modal-predio" class="modal-overlay hidden">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title">Nuevo predio</span>
+            <button class="btn btn-ghost btn-sm btn-icon" onclick="this.closest('.modal-overlay').classList.add('hidden')">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Referencia catastral</label>
+                    <input class="form-input form-input-full" placeholder="66075-01-XXX">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tipo de suelo</label>
+                    <select class="form-select form-input-full"><option>Suelo Urbano</option><option>Suelo Rural</option><option>Suelo de Expansión</option></select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Uso principal</label>
+                    <select class="form-select form-input-full"><option>Habitacional</option><option>Comercial</option><option>Agropecuario</option><option>Institucional</option></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Área lote (m²)</label>
+                    <input class="form-input form-input-full" type="number" placeholder="145.2">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Dirección</label>
+                <input class="form-input form-input-full" placeholder="Calle 5 #4-23">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Pisos máx permitidos</label>
+                    <input class="form-input form-input-full" type="number" placeholder="3">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Avalúo catastral ($)</label>
+                    <input class="form-input form-input-full" type="number" placeholder="48500000">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').classList.add('hidden')">Cancelar</button>
+            <button class="btn btn-primary" onclick="this.closest('.modal-overlay').classList.add('hidden');toast('Predio creado. Dibuja la geometría en el mapa.')">Crear y dibujar en mapa</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── MODAL Nuevo usuario ── -->
+<div id="modal-usuario" class="modal-overlay hidden">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title">Nuevo usuario</span>
+            <button class="btn btn-ghost btn-sm btn-icon" onclick="this.closest('.modal-overlay').classList.add('hidden')">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Nombre de usuario</label>
+                    <input class="form-input form-input-full" placeholder="tecnico2">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nombre completo</label>
+                    <input class="form-input form-input-full" placeholder="Ana Gómez">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Correo electrónico</label>
+                <input class="form-input form-input-full" type="email" placeholder="ana@balboa.gov.co">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Rol</label>
+                    <select class="form-select form-input-full">
+                        <option>Administrador</option>
+                        <option selected>Técnico SIG</option>
+                        <option>Visor (solo lectura)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Contraseña temporal</label>
+                    <input class="form-input form-input-full" type="password" placeholder="••••••••">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').classList.add('hidden')">Cancelar</button>
+            <button class="btn btn-primary" onclick="this.closest('.modal-overlay').classList.add('hidden');toast('Usuario creado. Se envió correo de bienvenida.')">Crear usuario</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── Credenciales demo ─────────────────────────────────────
+// [DJANGO] Reemplazar esta función por:
+//   fetch('/api/auth/login/', {method:'POST', body:JSON.stringify({username,password})})
+//   Si la respuesta es ok, redirigir al panel. Si no, mostrar error.
+const DEMO_USER = 'admin';
+const DEMO_PASS = 'demo1234';
+
+function intentarAcceso() {
+    const u = document.getElementById('g-user').value.trim();
+    const p = document.getElementById('g-pass').value;
+    const err = document.getElementById('guard-error');
+    if ((u === DEMO_USER && p === DEMO_PASS) || p === 'demo1234') {
+        document.getElementById('guard').classList.add('hidden');
+        document.getElementById('user-name').textContent = u;
+        document.getElementById('user-initials').textContent = u.slice(0,2).toUpperCase();
+        renderAll();
+    } else {
+        err.style.display = 'block';
+        setTimeout(() => err.style.display='none', 2500);
+    }
+}
+document.getElementById('g-pass').addEventListener('keydown', e => { if(e.key==='Enter') intentarAcceso(); });
+document.getElementById('g-user').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('g-pass').focus(); });
+
+function cerrarSesion() {
+    document.getElementById('guard').classList.remove('hidden');
+    document.getElementById('g-pass').value = '';
+}
+
+// ── Navegación ────────────────────────────────────────────
+function showPanel(id, navEl) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('panel-'+id).classList.add('active');
+    if (navEl) navEl.classList.add('active');
+}
+
+// ── Toast ─────────────────────────────────────────────────
+function toast(msg, tipo='ok') {
+    const t = document.getElementById('toast');
+    const colores = {ok:'#0f172a', error:'#991b1b', warn:'#92400e'};
+    t.style.background = colores[tipo] || colores.ok;
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── Datos mock ────────────────────────────────────────────
+const capasData = [
+    { nombre:'Perímetro Urbano',    tipo:'Polygon',    crs:'EPSG:4326', registros:1,  tam:'0.4 MB', estado:'cargada',   visible:true  },
+    { nombre:'Red Hídrica',         tipo:'LineString',  crs:'EPSG:4326', registros:34, tam:'1.2 MB', estado:'cargada',   visible:true  },
+    { nombre:'Zonas de Riesgo',     tipo:'Polygon',    crs:'EPSG:4326', registros:7,  tam:'0.8 MB', estado:'parcial',   visible:true  },
+    { nombre:'Cobertura CORINE',    tipo:'Polygon',    crs:'—',         registros:'—',tam:'—',      estado:'pendiente', visible:false },
+    { nombre:'Catastro Predial',    tipo:'Polygon',    crs:'—',         registros:'—',tam:'—',      estado:'pendiente', visible:false },
+    { nombre:'Equipamientos',       tipo:'Point',      crs:'—',         registros:'—',tam:'—',      estado:'pendiente', visible:false },
+    { nombre:'Infraestructura Vial',tipo:'LineString',  crs:'—',         registros:'—',tam:'—',      estado:'pendiente', visible:false },
+    { nombre:'Uso del Suelo EOT',   tipo:'Polygon',    crs:'—',         registros:'—',tam:'—',      estado:'pendiente', visible:false },
+];
+
+const prediosData = [
+    { ref:'66075-01-001', dir:'Calle 5 #4-23',    suelo:'Urbano', uso:'Habitacional', area:'145.2', avaluo:'$48.500.000' },
+    { ref:'66075-01-002', dir:'Carrera 3 #6-14',  suelo:'Urbano', uso:'Comercial',    area:'210.0', avaluo:'$72.000.000' },
+    { ref:'66075-01-003', dir:'Calle 7 #2-08',    suelo:'Urbano', uso:'Institucional',area:'380.5', avaluo:'$95.000.000' },
+    { ref:'66075-02-001', dir:'Vereda La Marina',  suelo:'Rural',  uso:'Agropecuario', area:'8420',  avaluo:'$35.000.000' },
+    { ref:'66075-02-002', dir:'Vereda El Aguacate',suelo:'Rural',  uso:'Agropecuario', area:'5200',  avaluo:'$28.000.000' },
+];
+
+const usuariosData = [
+    { user:'admin',    nombre:'Administrador SIG Johan',  rol:'Administrador',  acceso:'Hoy 9:42 am',   estado:'activo' },
+    { user:'tecnico1', nombre:'Nombre 1',    rol:'Técnico SIG',    acceso:'Ayer 3:15 pm',  estado:'activo' },
+    { user:'tecnico2', nombre:'Camila la novia de Juan David',      rol:'Técnico SIG',    acceso:'25/04/2026',    estado:'activo' },
+    { user:'visor1',   nombre:'Alcaldía Balboa',    rol:'Visor',          acceso:'22/04/2026',    estado:'inactivo' },
+];
+
+const logData = [
+    { user:'admin',    iniciales:'AD', color:'#f59e0b', accion:'Cargó la capa', obj:'Red Hídrica de Risaralda', tag:'carga',    tagColor:'#dbeafe', tagText:'#1e40af', tiempo:'Hoy 09:42 am' },
+    { user:'tecnico1', iniciales:'CR', color:'#3b82f6', accion:'Editó 3 registros en', obj:'Zonas de Riesgo', tag:'edición',  tagColor:'#fef3c7', tagText:'#92400e', tiempo:'Ayer 03:15 pm' },
+    { user:'admin',    iniciales:'AD', color:'#f59e0b', accion:'Creó usuario', obj:'tecnico2 (María Londoño)', tag:'usuario',  tagColor:'#d1fae5', tagText:'#065f46', tiempo:'25/04/2026 11:30 am' },
+    { user:'tecnico2', iniciales:'ML', color:'#10b981', accion:'Exportó', obj:'Perímetro Urbano como GeoJSON', tag:'export',   tagColor:'#ede9fe', tagText:'#5b21b6', tiempo:'25/04/2026 10:05 am' },
+    { user:'admin',    iniciales:'AD', color:'#f59e0b', accion:'Configuró índice GIST en', obj:'dptolimite.geom', tag:'sistema', tagColor:'#f1f5f9', tagText:'#475569', tiempo:'24/04/2026 04:30 pm' },
+    { user:'tecnico1', iniciales:'CR', color:'#3b82f6', accion:'Validó topología en', obj:'Zonas de Riesgo (7 registros OK)', tag:'validación',tagColor:'#d1fae5',tagText:'#065f46', tiempo:'23/04/2026 02:10 pm' },
+];
+
+const historialCargas = [
+    { archivo:'redhidrica_risaralda.geojson', user:'admin',    tam:'1.2 MB', fecha:'Hoy 09:40 am',  estado:'ok' },
+    { archivo:'dptolimite_balboa.zip',         user:'admin',    tam:'0.4 MB', fecha:'21/04/2026',    estado:'ok' },
+    { archivo:'catastro_2024_borrador.shp',    user:'tecnico1', tam:'8.1 MB', fecha:'20/04/2026',    estado:'error' },
+];
+
+const atributosData = {
+    perimetro: {
+        cols: ['id','Nom_mun','Area','Perimeter','Hectares'],
+        rows: [[1,'Balboa','120680337.0','54268.536','12068.034']]
+    },
+    redhidrica: {
+        cols: ['id','nombre','tipo','orden','longitud_m'],
+        rows: [
+            [1,'Río Risaralda','Principal',1,'18420.5'],
+            [2,'Río Mapa','Secundario',2,'9814.2'],
+            [3,'Quebrada El Tigre','Terciario',3,'2140.7'],
+            [4,'Quebrada La Cristalina','Terciario',3,'1850.3'],
+            [5,'null','Terciario',3,'920.1'],
+        ]
+    },
+    riesgo: {
+        cols: ['id','nombre','tipo','nivel','area_ha','fuente'],
+        rows: [
+            [1,'Ladera Norte','Deslizamiento','Alto','8.3','CARDER 2022'],
+            [2,'Inundación Río Mapa','Inundación','Medio','5.1','IDEAM 2021'],
+            [3,'Erosión Vereda El Vergel','Erosión','Bajo','12.7','IGAC 2020'],
+        ]
+    }
+};
+
+// ── Render ────────────────────────────────────────────────
+function renderAll() {
+    renderCapas(capasData);
+    renderPredios();
+    renderUsuarios();
+    renderLog(logData, 'log-preview', 4);
+    renderLog(logData, 'log-full', logData.length);
+    renderHistorial();
+}
+
+function renderCapas(data) {
+    const estadoBadge = {
+        'cargada':   '<span class="badge badge-green"><div class="badge-dot dot-green"></div>Cargada</span>',
+        'parcial':   '<span class="badge badge-amber"><div class="badge-dot dot-amber"></div>Parcial</span>',
+        'pendiente': '<span class="badge badge-gray">Pendiente</span>',
+    };
+    document.getElementById('count-capas').textContent = data.filter(c=>c.estado==='cargada').length;
+    document.getElementById('capas-body').innerHTML = data.map(c => `
+        <tr>
+            <td><strong style="color:var(--slate-900)">${c.nombre}</strong></td>
+            <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--slate-100);padding:2px 7px;border-radius:5px">${c.tipo}</span></td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--slate-500)">${c.crs}</td>
+            <td>${c.registros}</td>
+            <td style="color:var(--slate-400)">${c.tam}</td>
+            <td>${estadoBadge[c.estado]}</td>
+            <td>
+                <label class="toggle"><input type="checkbox" ${c.visible?'checked':''} onchange="toast('Visibilidad actualizada')"><div class="toggle-track"></div></label>
+            </td>
+            <td>
+                <div style="display:flex;gap:4px">
+                    <button class="btn btn-ghost btn-sm btn-icon" title="Ver atributos" onclick="verAtributos('${c.nombre}')">📋</button>
+                    <button class="btn btn-ghost btn-sm btn-icon" title="Exportar GeoJSON" onclick="toast('GeoJSON descargado')">⬇</button>
+                    <button class="btn btn-danger btn-sm btn-icon" title="Eliminar capa" onclick="if(confirm('¿Eliminar ${c.nombre}?'))toast('Capa eliminada','error')">🗑</button>
+                </div>
+            </td>
+        </tr>`).join('');
+}
+
+function filtrarCapas(q) {
+    const filtrado = capasData.filter(c => c.nombre.toLowerCase().includes(q.toLowerCase()));
+    renderCapas(filtrado);
+}
+
+function filtrarEstado(est) {
+    const filtrado = est ? capasData.filter(c=>c.estado===est) : capasData;
+    renderCapas(filtrado);
+}
+
+function verAtributos(nombre) {
+    const key = nombre.toLowerCase().replace(/\s+/g,'').includes('hid') ? 'redhidrica'
+              : nombre.toLowerCase().includes('riesgo') ? 'riesgo' : 'perimetro';
+    showPanel('atributos', null);
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    document.querySelector('[onclick*=atributos]').classList.add('active');
+    document.getElementById('capa-selector').value = key;
+    cargarAtributos(key);
+}
+
+function cargarAtributos(key) {
+    const container = document.getElementById('attr-container');
+    const countEl   = document.getElementById('attr-count');
+    if (!key || !atributosData[key]) {
+        container.innerHTML = '<div style="padding:48px;text-align:center;color:var(--slate-400)"><div style="font-size:28px;margin-bottom:8px">📋</div><div style="font-size:13px">Selecciona una capa para ver sus atributos</div></div>';
+        countEl.textContent = '';
+        return;
+    }
+    const {cols, rows} = atributosData[key];
+    countEl.textContent = `${rows.length} registro${rows.length!==1?'s':''}`;
+    container.innerHTML = `
+        <table class="attr-table">
+            <thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}<th>Acciones</th></tr></thead>
+            <tbody>${rows.map(row => `<tr>
+                ${row.map(v => `<td class="${v==='null'?'attr-val-null':isNaN(v)?'attr-val-str':'attr-val-num'}">${v==='null'?'null':v}</td>`).join('')}
+                <td><button class="btn btn-ghost btn-sm btn-icon" onclick="toast('Edición disponible con Django conectado')">✏️</button></td>
+            </tr>`).join('')}</tbody>
+        </table>`;
+}
+
+function exportarAtributos() {
+    const key = document.getElementById('capa-selector').value;
+    if (!key) { toast('Selecciona una capa primero','warn'); return; }
+    const {cols,rows} = atributosData[key];
+    const csv = [cols.join(','), ...rows.map(r=>r.join(','))].join('\n');
+    const a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    a.download = `${key}_atributos.csv`;
+    a.click();
+    toast('CSV exportado correctamente');
+}
+
+function renderPredios() {
+    document.getElementById('predios-body').innerHTML = prediosData.map(p => `
+        <tr>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600">${p.ref}</td>
+            <td>${p.dir}</td>
+            <td><span class="badge ${p.suelo==='Urbano'?'badge-blue':'badge-green'}">${p.suelo}</span></td>
+            <td>${p.uso}</td>
+            <td>${p.area}</td>
+            <td style="font-weight:600;color:var(--emerald-d)">${p.avaluo}</td>
+            <td>
+                <div style="display:flex;gap:4px">
+                    <button class="btn btn-ghost btn-sm btn-icon" onclick="toast('Editar predio: ${p.ref}')">✏️</button>
+                    <button class="btn btn-danger btn-sm btn-icon" onclick="if(confirm('¿Eliminar ${p.ref}?'))toast('Predio eliminado','error')">🗑</button>
+                </div>
+            </td>
+        </tr>`).join('');
+}
+
+function renderUsuarios() {
+    const rolBadge = {
+        'Administrador': 'badge-amber',
+        'Técnico SIG':   'badge-blue',
+        'Visor':         'badge-gray',
+    };
+    document.getElementById('usuarios-body').innerHTML = usuariosData.map(u => `
+        <tr>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600">${u.user}</td>
+            <td>${u.nombre}</td>
+            <td><span class="badge ${rolBadge[u.rol]||'badge-gray'}">${u.rol}</span></td>
+            <td style="color:var(--slate-400);font-size:12px">${u.acceso}</td>
+            <td><span class="badge ${u.estado==='activo'?'badge-green':'badge-gray'}"><div class="badge-dot ${u.estado==='activo'?'dot-green':''}"></div>${u.estado}</span></td>
+            <td>
+                <div style="display:flex;gap:4px">
+                    <button class="btn btn-ghost btn-sm btn-icon" onclick="toast('Editar usuario: ${u.user}')">✏️</button>
+                    <button class="btn btn-danger btn-sm btn-icon" onclick="if(confirm('¿Deshabilitar ${u.user}?'))toast('Usuario deshabilitado','error')">🚫</button>
+                </div>
+            </td>
+        </tr>`).join('');
+}
+
+function renderLog(data, containerId, limite) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = data.slice(0, limite).map(l => `
+        <div class="log-item">
+            <div class="log-avatar" style="background:${l.color}22;color:${l.color}">${l.iniciales}</div>
+            <div class="log-content">
+                <div class="log-action">
+                    <strong>${l.user}</strong> ${l.accion} <strong>${l.obj}</strong>
+                    <span class="log-tag" style="background:${l.tagColor};color:${l.tagText};margin-left:6px">${l.tag}</span>
+                </div>
+                <div class="log-time">${l.tiempo}</div>
+            </div>
+        </div>`).join('');
+}
+
+function renderHistorial() {
+    const est = { ok:'badge-green', error:'badge-red' };
+    document.getElementById('historial-cargas').innerHTML = historialCargas.map(h => `
+        <div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--slate-100)">
+            <div style="font-size:18px">${h.archivo.endsWith('zip')?'🗜️':'📄'}</div>
+            <div style="flex:1">
+                <div style="font-size:12px;font-weight:700;color:var(--slate-800)">${h.archivo}</div>
+                <div style="font-size:11px;color:var(--slate-400)">${h.user} · ${h.tam} · ${h.fecha}</div>
+            </div>
+            <span class="badge ${est[h.estado]}">${h.estado==='ok'?'✓ OK':'✗ Error'}</span>
+        </div>`).join('');
+}
+
+// ── Upload simulado ───────────────────────────────────────
+function handleFileSelect(input) {
+    if (!input.files[0]) return;
+    mostrarPreview(input.files[0]);
+}
+function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('drop-zone').classList.remove('drag');
+    if (e.dataTransfer.files[0]) mostrarPreview(e.dataTransfer.files[0]);
+}
+function mostrarPreview(file) {
+    const emojis = { geojson:'🗺️', json:'🗺️', zip:'🗜️', kml:'📍' };
+    const ext = file.name.split('.').pop().toLowerCase();
+    document.getElementById('file-emoji').textContent = emojis[ext] || '📄';
+    document.getElementById('file-name').textContent  = file.name;
+    document.getElementById('file-size').textContent  = (file.size/1024/1024).toFixed(2)+' MB';
+    document.getElementById('upload-preview').style.display = 'block';
+}
+function limpiarUpload() {
+    document.getElementById('upload-preview').style.display = 'none';
+    document.getElementById('file-input').value = '';
+    document.getElementById('progress-wrap').style.display = 'none';
+    document.getElementById('progress-bar').style.width = '0%';
+}
+function simularUpload() {
+    const pw = document.getElementById('progress-wrap');
+    const pb = document.getElementById('progress-bar');
+    pw.style.display = 'block';
+    pb.style.width   = '0%';
+    let p = 0;
+    const iv = setInterval(() => {
+        p += Math.random() * 18;
+        if (p >= 100) {
+            p = 100; clearInterval(iv);
+            setTimeout(() => {
+                toast('Capa cargada correctamente en PostGIS ✓');
+                limpiarUpload();
+            }, 300);
+        }
+        pb.style.width = p + '%';
+    }, 180);
+}
+</script>
+</body>
+</html>
